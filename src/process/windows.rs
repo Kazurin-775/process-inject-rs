@@ -1,12 +1,17 @@
 use win32_error::Win32Error;
 use winapi::shared::minwindef::{DWORD, FALSE};
-use winapi::um::winnt::{HANDLE, PROCESS_CREATE_THREAD, PROCESS_VM_READ, PROCESS_VM_WRITE};
+use winapi::um::winnt::{
+    HANDLE, MEM_COMMIT, MEM_RELEASE, MEM_RESERVE, PAGE_EXECUTE, PAGE_EXECUTE_READ,
+    PAGE_EXECUTE_READWRITE, PAGE_NOACCESS, PAGE_READONLY, PAGE_READWRITE, PROCESS_CREATE_THREAD,
+    PROCESS_VM_READ, PROCESS_VM_WRITE,
+};
 use winapi::um::{
-    handleapi::CloseHandle, memoryapi::ReadProcessMemory, memoryapi::WriteProcessMemory,
-    processthreadsapi::CreateRemoteThread, processthreadsapi::OpenProcess,
+    handleapi::CloseHandle, memoryapi::ReadProcessMemory, memoryapi::VirtualAllocEx,
+    memoryapi::VirtualFreeEx, memoryapi::WriteProcessMemory, processthreadsapi::CreateRemoteThread,
+    processthreadsapi::OpenProcess,
 };
 
-use super::Process;
+use super::{MemoryAccess, Process};
 
 pub type Pid = DWORD;
 pub type Handle = HANDLE;
@@ -31,6 +36,47 @@ pub unsafe fn open_process(
     let handle = OpenProcess(access, FALSE, pid);
     if !handle.is_null() {
         Ok(Process::from_raw(handle))
+    } else {
+        Err(Win32Error::new())
+    }
+}
+
+pub unsafe fn allocate_process_memory(
+    process: &mut Process,
+    size: usize,
+    access: MemoryAccess,
+) -> Result<usize, Error> {
+    let access = match access {
+        MemoryAccess::None => PAGE_NOACCESS,
+        MemoryAccess::ExecuteOnly => PAGE_EXECUTE,
+        MemoryAccess::WriteOnly => PAGE_READWRITE,
+        MemoryAccess::WriteExecute => PAGE_EXECUTE_READWRITE,
+        MemoryAccess::ReadOnly => PAGE_READONLY,
+        MemoryAccess::ReadExecute => PAGE_EXECUTE_READ,
+        MemoryAccess::ReadWrite => PAGE_READWRITE,
+        MemoryAccess::ReadWriteExecute => PAGE_EXECUTE_READWRITE,
+    };
+    let result = VirtualAllocEx(
+        process.to_raw_handle(),
+        std::ptr::null_mut(),
+        size,
+        MEM_RESERVE | MEM_COMMIT,
+        access,
+    );
+    if !result.is_null() {
+        Ok(result as usize)
+    } else {
+        Err(Win32Error::new())
+    }
+}
+
+pub unsafe fn deallocate_process_memory(
+    process: &mut Process,
+    address: usize,
+) -> Result<(), Error> {
+    let result = VirtualFreeEx(process.to_raw_handle(), address as *mut _, 0, MEM_RELEASE);
+    if result != 0 {
+        Ok(())
     } else {
         Err(Win32Error::new())
     }
