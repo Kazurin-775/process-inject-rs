@@ -18,9 +18,7 @@ pub struct Process {
 
 impl Process {
     pub fn open(pid: Pid) -> Result<Process> {
-        ProcessOpenOptions::new(pid)
-            .enable_all_access()
-            .open()
+        ProcessOpenOptions::new(pid).enable_all_access().open()
     }
 
     pub fn from_raw(handle: Handle) -> Process {
@@ -42,6 +40,10 @@ impl Process {
 
     pub unsafe fn write_memory(&mut self, address: usize, buffer: &[u8]) -> Result<()> {
         os::write_process_memory(self, address, buffer)
+    }
+
+    pub unsafe fn create_thread(&mut self, function: usize, argument: usize) -> Result<()> {
+        os::create_thread(self, function, argument)
     }
 }
 

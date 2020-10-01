@@ -3,7 +3,7 @@ use winapi::shared::minwindef::{DWORD, FALSE};
 use winapi::um::winnt::{HANDLE, PROCESS_CREATE_THREAD, PROCESS_VM_READ, PROCESS_VM_WRITE};
 use winapi::um::{
     handleapi::CloseHandle, memoryapi::ReadProcessMemory, memoryapi::WriteProcessMemory,
-    processthreadsapi::OpenProcess,
+    processthreadsapi::CreateRemoteThread, processthreadsapi::OpenProcess,
 };
 
 use super::Process;
@@ -74,6 +74,28 @@ pub unsafe fn write_process_memory(
     }
     assert_eq!(bytes_written, buffer.len());
     Ok(())
+}
+
+pub unsafe fn create_thread(
+    process: &mut Process,
+    function: usize,
+    argument: usize,
+) -> Result<(), Error> {
+    let handle = CreateRemoteThread(
+        process.to_raw_handle(),
+        std::ptr::null_mut(),
+        0,
+        Some(std::mem::transmute(function)),
+        argument as *mut _,
+        0,
+        std::ptr::null_mut(),
+    );
+    if !handle.is_null() {
+        CloseHandle(handle);
+        Ok(())
+    } else {
+        Err(Win32Error::new())
+    }
 }
 
 pub unsafe fn close_process(process: &mut Process) {
