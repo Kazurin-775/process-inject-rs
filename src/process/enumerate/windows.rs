@@ -1,6 +1,7 @@
 use std::ffi::OsString;
 use std::os::windows::ffi::OsStringExt;
 
+use anyhow::Context;
 use win32_error::Win32Error;
 use winapi::um::handleapi::INVALID_HANDLE_VALUE;
 use winapi::um::tlhelp32::{
@@ -15,9 +16,9 @@ pub struct Enumerator {
     toolhelp32: HANDLE,
     is_first: bool,
 }
-pub type Error = Win32Error;
+pub type Error = anyhow::Error;
 
-pub unsafe fn enumerator_new() -> super::Result<Enumerator> {
+pub unsafe fn enumerator_new() -> Result<Enumerator, Error> {
     let toolhelp32 = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if toolhelp32 != INVALID_HANDLE_VALUE {
         Ok(Enumerator {
@@ -25,7 +26,7 @@ pub unsafe fn enumerator_new() -> super::Result<Enumerator> {
             is_first: true,
         })
     } else {
-        Err(Win32Error::new())
+        Err(Win32Error::new()).context("failed to create Win32 toolhelp snapshot")
     }
 }
 
