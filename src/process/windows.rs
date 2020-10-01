@@ -3,7 +3,7 @@ use winapi::shared::minwindef::{DWORD, FALSE};
 use winapi::um::winnt::{
     HANDLE, MEM_COMMIT, MEM_RELEASE, MEM_RESERVE, PAGE_EXECUTE, PAGE_EXECUTE_READ,
     PAGE_EXECUTE_READWRITE, PAGE_NOACCESS, PAGE_READONLY, PAGE_READWRITE, PROCESS_CREATE_THREAD,
-    PROCESS_VM_READ, PROCESS_VM_WRITE,
+    PROCESS_VM_OPERATION, PROCESS_VM_READ, PROCESS_VM_WRITE,
 };
 use winapi::um::{
     handleapi::CloseHandle, memoryapi::ReadProcessMemory, memoryapi::VirtualAllocEx,
@@ -19,11 +19,15 @@ pub type Error = Win32Error;
 
 pub unsafe fn open_process(
     pid: Pid,
+    mem_alloc: bool,
     mem_read: bool,
     mem_write: bool,
     execute: bool,
 ) -> Result<Process, Error> {
     let mut access = 0;
+    if mem_alloc {
+        access |= PROCESS_VM_OPERATION;
+    }
     if mem_read {
         access |= PROCESS_VM_READ;
     }
