@@ -1,4 +1,5 @@
 pub mod enumerate;
+pub mod inject;
 pub mod open_options;
 
 #[cfg(windows)]
