@@ -12,7 +12,7 @@ pub fn encode_path_string(path: &Path) -> Vec<u16> {
 }
 
 pub unsafe fn get_load_library_fn() -> usize {
-    let kernel32 = GetModuleHandleW(wstr!("kernel32").as_ptr());
+    let kernel32 = GetModuleHandleW(wstr!("kernel32\0").as_ptr());
     assert!(!kernel32.is_null());
     let load_library_w = GetProcAddress(kernel32, "LoadLibraryW\0".as_ptr() as *const _);
     assert!(!load_library_w.is_null());
