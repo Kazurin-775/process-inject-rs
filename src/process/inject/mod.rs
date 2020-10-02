@@ -23,9 +23,14 @@ pub unsafe fn inject_shared_library(
     process
         .write_memory(address, data)
         .context("failed to write to memory in the target process")?;
-    process
+    let join_handle = process
         .create_thread(os::get_load_library_fn(), address)
         .context("failed to create thread in the target process")?;
-    // TODO: free memory
+    join_handle
+        .join()
+        .context("failed to join the remote thread")?;
+    process
+        .deallocate_memory(address)
+        .context("failed to deallocate memory")?;
     Ok(())
 }
