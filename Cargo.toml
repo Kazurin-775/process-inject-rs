@@ -16,5 +16,6 @@ winapi = {version = "0.3.9", features = [
   "memoryapi",
   "tlhelp32",
   "libloaderapi",
+  "synchapi",
 ]}
 wstr = "0.2.0"

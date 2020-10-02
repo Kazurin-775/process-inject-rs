@@ -1,5 +1,6 @@
 use win32_error::Win32Error;
 use winapi::shared::minwindef::{DWORD, FALSE};
+use winapi::um::winbase::{INFINITE, WAIT_FAILED, WAIT_OBJECT_0};
 use winapi::um::winnt::{
     HANDLE, MEM_COMMIT, MEM_RELEASE, MEM_RESERVE, PAGE_EXECUTE, PAGE_EXECUTE_READ,
     PAGE_EXECUTE_READWRITE, PAGE_NOACCESS, PAGE_READONLY, PAGE_READWRITE, PROCESS_CREATE_THREAD,
@@ -8,13 +9,14 @@ use winapi::um::winnt::{
 use winapi::um::{
     handleapi::CloseHandle, memoryapi::ReadProcessMemory, memoryapi::VirtualAllocEx,
     memoryapi::VirtualFreeEx, memoryapi::WriteProcessMemory, processthreadsapi::CreateRemoteThread,
-    processthreadsapi::OpenProcess,
+    processthreadsapi::OpenProcess, synchapi::WaitForSingleObject,
 };
 
 use super::{MemoryAccess, Process};
 
 pub type Pid = DWORD;
 pub type Handle = HANDLE;
+pub type JoinHandle = HANDLE;
 pub type Error = Win32Error;
 
 pub unsafe fn open_process(
@@ -130,7 +132,7 @@ pub unsafe fn create_thread(
     process: &mut Process,
     function: usize,
     argument: usize,
-) -> Result<(), Error> {
+) -> Result<JoinHandle, Error> {
     let handle = CreateRemoteThread(
         process.to_raw_handle(),
         std::ptr::null_mut(),
@@ -141,8 +143,7 @@ pub unsafe fn create_thread(
         std::ptr::null_mut(),
     );
     if !handle.is_null() {
-        CloseHandle(handle);
-        Ok(())
+        Ok(handle)
     } else {
         Err(Win32Error::new())
     }
@@ -150,4 +151,22 @@ pub unsafe fn create_thread(
 
 pub unsafe fn close_process(process: &mut Process) {
     CloseHandle(process.to_raw_handle());
+}
+
+pub unsafe fn join_thread(handle: HANDLE) -> Result<(), Error> {
+    let result = WaitForSingleObject(handle, INFINITE);
+    if result == WAIT_OBJECT_0 {
+        Ok(())
+    } else if result == WAIT_FAILED {
+        Err(Win32Error::new())
+    } else {
+        panic!(format!(
+            "unexpected return value from WaitForSingleObject: {:#X}",
+            result
+        ));
+    }
+}
+
+pub unsafe fn close_join_handle(handle: HANDLE) {
+    CloseHandle(handle);
 }

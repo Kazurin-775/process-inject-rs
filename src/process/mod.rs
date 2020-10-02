@@ -29,6 +29,10 @@ pub enum MemoryAccess {
     ReadWriteExecute = 7,
 }
 
+pub struct JoinHandle {
+    inner: os::JoinHandle,
+}
+
 impl Process {
     pub fn open(pid: Pid) -> Result<Process> {
         ProcessOpenOptions::new(pid).enable_all_access().open()
@@ -63,8 +67,9 @@ impl Process {
         os::write_process_memory(self, address, buffer)
     }
 
-    pub unsafe fn create_thread(&mut self, function: usize, argument: usize) -> Result<()> {
-        os::create_thread(self, function, argument)
+    pub unsafe fn create_thread(&mut self, function: usize, argument: usize) -> Result<JoinHandle> {
+        let handle = os::create_thread(self, function, argument)?;
+        Ok(JoinHandle { inner: handle })
     }
 }
 
@@ -92,6 +97,20 @@ impl MemoryAccess {
             (true, false, true) => Self::ReadExecute,
             (true, true, false) => Self::ReadWrite,
             (true, true, true) => Self::ReadWriteExecute,
+        }
+    }
+}
+
+impl JoinHandle {
+    pub fn join(self) -> Result<()> {
+        unsafe { os::join_thread(self.inner) }
+    }
+}
+
+impl Drop for JoinHandle {
+    fn drop(&mut self) {
+        unsafe {
+            os::close_join_handle(self.inner);
         }
     }
 }
