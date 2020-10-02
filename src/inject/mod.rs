@@ -1,6 +1,5 @@
 #[cfg(windows)]
 mod windows;
-
 #[cfg(windows)]
 use windows as os;
 
@@ -8,7 +7,7 @@ use std::path::Path;
 
 use anyhow::Context;
 
-use super::MemoryAccess;
+use crate::process::MemoryAccess;
 use crate::Process;
 
 pub unsafe fn inject_shared_library(

@@ -1,5 +1,4 @@
 pub mod enumerate;
-pub mod inject;
 pub mod open_options;
 
 #[cfg(windows)]
@@ -9,6 +8,7 @@ use windows as os;
 
 use os::{Error, Handle, Pid};
 
+pub use enumerate::ProcessEnumerator;
 pub use open_options::ProcessOpenOptions;
 
 pub type Result<T> = std::result::Result<T, Error>;
