@@ -1,7 +1,7 @@
 use std::{convert::TryFrom, ffi::OsString, os::windows::prelude::OsStringExt};
 use win32_error::Win32Error;
 use winapi::shared::minwindef::FALSE;
-use winapi::um::handleapi::INVALID_HANDLE_VALUE;
+use winapi::um::handleapi::{CloseHandle, INVALID_HANDLE_VALUE};
 use winapi::um::tlhelp32::{
     CreateToolhelp32Snapshot, Process32FirstW, Process32NextW,
     PROCESSENTRY32W, TH32CS_SNAPPROCESS,
@@ -52,6 +52,15 @@ impl Iterator for ProcessEnumerator {
             Some(Ok(ProcessRecord { inner: entry }))
         } else {
             None
+        }
+    }
+}
+
+impl Drop for ProcessEnumerator {
+    fn drop(&mut self) {
+        unsafe {
+            CloseHandle(self.toolhelp32);
+            // the return value is silently ignored
         }
     }
 }

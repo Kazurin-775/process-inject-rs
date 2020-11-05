@@ -1,5 +1,6 @@
 use win32_error::Win32Error;
 use winapi::um::{
+    handleapi::CloseHandle,
     memoryapi::{ReadProcessMemory, VirtualAllocEx, VirtualFreeEx, WriteProcessMemory},
     processthreadsapi::CreateRemoteThread,
     synchapi::WaitForSingleObject,
@@ -99,6 +100,15 @@ impl Process {
                 "unexpected return value from WaitForSingleObject: {:#X}",
                 result
             ))
+        }
+    }
+}
+
+impl Drop for Process {
+    fn drop(&mut self) {
+        unsafe {
+            CloseHandle(self.handle);
+            // the return value is silently ignored
         }
     }
 }
