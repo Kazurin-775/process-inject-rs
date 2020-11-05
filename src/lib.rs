@@ -1,7 +1,6 @@
 pub mod inject;
 pub mod process;
+pub mod sys;
 
-pub enum Error {
-}
-
+pub type Error = sys::Error;
 pub type Result<T> = std::result::Result<T, Error>;
