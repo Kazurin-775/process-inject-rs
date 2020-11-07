@@ -16,6 +16,18 @@ impl From<Process> for imp::Process {
     }
 }
 
+impl AsRef<imp::Process> for Process {
+    fn as_ref(&self) -> &imp::Process {
+        &self.inner
+    }
+}
+
+impl AsMut<imp::Process> for Process {
+    fn as_mut(&mut self) -> &mut imp::Process {
+        &mut self.inner
+    }
+}
+
 impl Process {
     pub unsafe fn alloc_memory(&mut self, size: usize) -> crate::Result<usize> {
         self.inner.alloc_memory(size)
