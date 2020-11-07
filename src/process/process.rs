@@ -62,17 +62,13 @@ impl Process {
     }
 
     pub unsafe fn read_memory<T>(&mut self, addr: usize, data: &mut [T]) -> crate::Result<()> {
-        let num_bytes = std::mem::size_of::<T>()
-            .checked_mul(data.len())
-            .expect("pointer arithmetic overflow");
+        let num_bytes = std::mem::size_of::<T>().checked_mul(data.len()).unwrap();
         self.inner
             .read_memory_raw(addr, data.as_mut_ptr(), num_bytes)
     }
 
     pub unsafe fn write_memory<T>(&mut self, addr: usize, data: &[T]) -> crate::Result<()> {
-        let num_bytes = std::mem::size_of::<T>()
-            .checked_mul(data.len())
-            .expect("pointer arithmetic overflow");
+        let num_bytes = std::mem::size_of::<T>().checked_mul(data.len()).unwrap();
         self.inner.write_memory_raw(addr, data.as_ptr(), num_bytes)
     }
 
