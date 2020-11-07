@@ -1,5 +1,7 @@
 use crate::sys::process as imp;
 
+use super::{Pid, ProcessOpenOptions};
+
 pub struct Process {
     inner: imp::Process,
 }
@@ -29,6 +31,10 @@ impl AsMut<imp::Process> for Process {
 }
 
 impl Process {
+    pub fn open(pid: Pid) -> crate::Result<Process> {
+        ProcessOpenOptions::new(pid).enable_all_access().open()
+    }
+
     pub unsafe fn alloc_memory(&mut self, size: usize) -> crate::Result<usize> {
         self.inner.alloc_memory(size)
     }
