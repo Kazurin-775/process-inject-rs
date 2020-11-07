@@ -1,6 +1,6 @@
 use crate::sys::process as imp;
 
-use super::{Pid, ProcessOpenOptions};
+use super::{MemAccess, Pid, ProcessOpenOptions};
 
 pub struct Process {
     inner: imp::Process,
@@ -35,8 +35,8 @@ impl Process {
         ProcessOpenOptions::new(pid).enable_all_access().open()
     }
 
-    pub unsafe fn alloc_memory(&mut self, size: usize) -> crate::Result<usize> {
-        self.inner.alloc_memory(size)
+    pub unsafe fn alloc_memory(&mut self, size: usize, access: MemAccess) -> crate::Result<usize> {
+        self.inner.alloc_memory(size, access)
     }
 
     pub unsafe fn dealloc_memory(&mut self, addr: usize) -> crate::Result<()> {

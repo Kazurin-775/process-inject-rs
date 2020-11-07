@@ -10,7 +10,8 @@ use winapi::um::{
     winnt::*,
 };
 
-use crate::os::windows::ProcessExt;
+use crate::os::windows::{MemAccessExt, ProcessExt};
+use crate::process::MemAccess;
 use crate::{Error, Result};
 
 pub struct Process {
@@ -33,14 +34,14 @@ impl ProcessExt for Process {
 }
 
 impl Process {
-    pub unsafe fn alloc_memory(&mut self, size: usize) -> Result<usize> {
+    pub unsafe fn alloc_memory(&mut self, size: usize, access: MemAccess) -> Result<usize> {
         // TODO: memory protection control
         let ptr = VirtualAllocEx(
             self.handle,
             std::ptr::null_mut(),
             size,
             MEM_RESERVE | MEM_COMMIT,
-            PAGE_EXECUTE_READWRITE,
+            access.into_page_protect_loose(),
         );
         if !ptr.is_null() {
             Ok(ptr as usize)

@@ -1,10 +1,12 @@
 mod enumerator;
+mod mem_access;
 mod open_options;
 mod process;
 mod record;
 
 use crate::sys::process as imp;
 pub use enumerator::ProcessEnumerator;
+pub use mem_access::MemAccess;
 pub use open_options::ProcessOpenOptions;
 pub use process::Process;
 pub use record::ProcessRecord;
