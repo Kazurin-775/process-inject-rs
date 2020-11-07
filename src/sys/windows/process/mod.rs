@@ -15,3 +15,9 @@ impl From<DWORD> for Pid {
         Pid(pid)
     }
 }
+
+impl From<Pid> for DWORD {
+    fn from(pid: Pid) -> Self {
+        pid.0
+    }
+}
