@@ -7,6 +7,8 @@ version = "0.1.0"
 [dependencies]
 cfg-if = "1.0.0"
 thiserror = "1.0.21"
+
+[target.'cfg(windows)'.dependencies]
 win32-error = { git = "https://github.com/Rust-WinGUI/win32-error.git", rev = "3ed867a" }
 winapi = { version = "0.3.9", features = [
   "minwindef",
