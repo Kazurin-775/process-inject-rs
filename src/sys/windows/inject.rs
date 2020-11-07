@@ -3,7 +3,7 @@ use std::{os::windows::prelude::OsStrExt, path::Path};
 use winapi::um::libloaderapi::{GetModuleHandleW, GetProcAddress};
 
 use super::process::Process;
-use crate::Result;
+use crate::{process::MemAccess, Result};
 
 unsafe fn get_load_library() -> usize {
     // fix a bug in `wstr` crate
@@ -25,7 +25,10 @@ where
     let path = path.as_ref().as_os_str();
     let path_encoded: Vec<_> = path.encode_wide().chain(std::iter::once(0)).collect();
 
-    let addr = process.alloc_memory(path_encoded.len() * std::mem::size_of::<u16>())?;
+    let addr = process.alloc_memory(
+        path_encoded.len() * std::mem::size_of::<u16>(),
+        MemAccess::RW,
+    )?;
     // ensure memory deallocation with a closure
     let result: Result<()> = (|| {
         process.write_memory(addr, crate::memory::transmute_to_bytes(&path_encoded))?;
