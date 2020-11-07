@@ -1,5 +1,6 @@
 pub mod inject;
 pub mod memory;
+pub mod os;
 pub mod process;
 mod sys;
 

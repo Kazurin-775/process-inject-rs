@@ -1,3 +1,5 @@
+use std::mem::ManuallyDrop;
+
 use win32_error::Win32Error;
 use winapi::um::{
     handleapi::CloseHandle,
@@ -8,17 +10,29 @@ use winapi::um::{
     winnt::*,
 };
 
+use crate::os::windows::ProcessExt;
 use crate::{Error, Result};
 
 pub struct Process {
     handle: HANDLE,
 }
 
-impl Process {
-    pub unsafe fn from_raw_handle(handle: HANDLE) -> Process {
-        Process { handle }
+impl ProcessExt for Process {
+    fn to_raw_handle(&self) -> HANDLE {
+        self.handle
     }
 
+    fn into_raw_handle(self) -> HANDLE {
+        let guard = ManuallyDrop::new(self);
+        guard.handle
+    }
+
+    unsafe fn from_raw_handle(handle: HANDLE) -> Self {
+        Process { handle }
+    }
+}
+
+impl Process {
     pub unsafe fn alloc_memory(&mut self, size: usize) -> Result<usize> {
         // TODO: memory protection control
         let ptr = VirtualAllocEx(

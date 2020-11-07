@@ -3,6 +3,7 @@ use winapi::shared::minwindef::*;
 use winapi::um::processthreadsapi::OpenProcess;
 use winapi::um::winnt::*;
 
+use crate::os::windows::ProcessExt;
 use crate::{Error, Result};
 
 use super::{Pid, Process};
