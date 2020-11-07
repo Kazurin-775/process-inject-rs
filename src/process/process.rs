@@ -43,12 +43,37 @@ impl Process {
         self.inner.dealloc_memory(addr)
     }
 
-    pub unsafe fn read_memory(&mut self, addr: usize, data: &mut [u8]) -> crate::Result<()> {
-        self.inner.read_memory(addr, data)
+    pub unsafe fn read_memory_raw<T>(
+        &mut self,
+        addr: usize,
+        data: *mut T,
+        num_bytes: usize,
+    ) -> crate::Result<()> {
+        self.inner.read_memory_raw(addr, data, num_bytes)
     }
 
-    pub unsafe fn write_memory(&mut self, addr: usize, data: &[u8]) -> crate::Result<()> {
-        self.inner.write_memory(addr, data)
+    pub unsafe fn write_memory_raw<T>(
+        &mut self,
+        addr: usize,
+        data: *const T,
+        num_bytes: usize,
+    ) -> crate::Result<()> {
+        self.inner.write_memory_raw(addr, data, num_bytes)
+    }
+
+    pub unsafe fn read_memory<T>(&mut self, addr: usize, data: &mut [T]) -> crate::Result<()> {
+        let num_bytes = std::mem::size_of::<T>()
+            .checked_mul(data.len())
+            .expect("pointer arithmetic overflow");
+        self.inner
+            .read_memory_raw(addr, data.as_mut_ptr(), num_bytes)
+    }
+
+    pub unsafe fn write_memory<T>(&mut self, addr: usize, data: &[T]) -> crate::Result<()> {
+        let num_bytes = std::mem::size_of::<T>()
+            .checked_mul(data.len())
+            .expect("pointer arithmetic overflow");
+        self.inner.write_memory_raw(addr, data.as_ptr(), num_bytes)
     }
 
     pub unsafe fn call_function(&mut self, addr: usize, arg: usize) -> crate::Result<()> {

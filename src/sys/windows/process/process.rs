@@ -59,35 +59,45 @@ impl Process {
         }
     }
 
-    pub unsafe fn read_memory(&mut self, addr: usize, data: &mut [u8]) -> Result<()> {
+    pub unsafe fn read_memory_raw<T>(
+        &mut self,
+        addr: usize,
+        data: *mut T,
+        num_bytes: usize,
+    ) -> Result<()> {
         let mut bytes_read = 0;
         let result = ReadProcessMemory(
             self.handle,
             addr as *const _,
-            data.as_mut_ptr() as *mut _,
-            data.len(),
+            data as *mut _,
+            num_bytes,
             &mut bytes_read,
         );
         if result == 0 {
             return Err(Error::Win32Error(Win32Error::new()));
         }
-        assert_eq!(bytes_read, data.len());
+        assert_eq!(bytes_read, num_bytes);
         Ok(())
     }
 
-    pub unsafe fn write_memory(&mut self, addr: usize, data: &[u8]) -> Result<()> {
+    pub unsafe fn write_memory_raw<T>(
+        &mut self,
+        addr: usize,
+        data: *const T,
+        num_bytes: usize,
+    ) -> Result<()> {
         let mut bytes_written = 0;
         let result = WriteProcessMemory(
             self.handle,
             addr as *mut _,
-            data.as_ptr() as *const _,
-            data.len(),
+            data as *const _,
+            num_bytes,
             &mut bytes_written,
         );
         if result == 0 {
             return Err(Error::Win32Error(Win32Error::new()));
         }
-        assert_eq!(bytes_written, data.len());
+        assert_eq!(bytes_written, num_bytes);
         Ok(())
     }
 
