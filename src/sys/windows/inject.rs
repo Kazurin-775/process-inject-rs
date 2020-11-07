@@ -31,7 +31,11 @@ where
     )?;
     // ensure memory deallocation with a closure
     let result: Result<()> = (|| {
-        process.write_memory(addr, crate::memory::transmute_to_bytes(&path_encoded))?;
+        process.write_memory_raw(
+            addr,
+            path_encoded.as_ptr(),
+            path_encoded.len() * std::mem::size_of::<u16>(),
+        )?;
         process.call_function(get_load_library(), addr)?;
         Ok(())
     })();
