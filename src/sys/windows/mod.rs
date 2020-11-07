@@ -1,3 +1,4 @@
+pub mod inject;
 pub mod process;
 
 #[derive(thiserror::Error, Debug)]
